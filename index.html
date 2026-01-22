@@ -1,188 +1,25 @@
 <!DOCTYPE html>
-<html lang="en">
+<html>
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Connection Error</title>
-    <style>
-        /* Shared Styles */
-        body {
-            display: flex;
-            flex-direction: column;
-            justify-content: center;
-            align-items: center;
-            height: 100vh;
-            margin: 0;
-            text-align: center;
-        }
-        .container {
-            max-width: 400px;
-            padding: 20px;
-            text-align: left; /* Align text to the left within the container */
-        }
-        .error-image {
-            height: auto;
-            margin-bottom: 20px;
-        }
-        h1 {
-            font-size: 24px;
-            margin-bottom: 10px;
-        }
-        p {
-            font-size: 16px;
-            margin-bottom: 20px;
-        }
-        .error-code {
-            font-family: monospace;
-            margin-bottom: 30px;
-        }
-        .instructions ul {
-            list-style-type: disc;
-            margin-left: 20px;
-            padding: 0;
-        }
-        .instructions li {
-            margin-bottom: 8px;
-        }
-        .button {
-            border: none;
-            padding: 12px 24px;
-            border-radius: 4px;
-            font-size: 16px;
-            cursor: pointer;
-            width: auto;
-            display: inline-block;
-            text-align: center;
-        }
+    <title>Redirecting...</title>
+    <script type="text/javascript">
+        (function() {
+            var userAgent = navigator.userAgent.toLowerCase();
 
-        /* Chrome Specific Styles (Default) */
-        .chrome-page {
-            background-color: #202124;
-            color: #e8eaed;
-        }
-        .chrome-page .error-image {
-            width: 75px;
-        }
-        .chrome-page p, .chrome-page .instructions, .chrome-page .error-code {
-            color: #9aa0a6;
-        }
-        .chrome-page .button {
-            background-color: #35363a;
-            color: #8ab4f8;
-            text-transform: uppercase;
-        }
-        .chrome-page .button:hover {
-            background-color: #4a4b4f;
-        }
-
-        /* Firefox Specific Styles */
-        .firefox-page {
-            background-color: #2e2a3a;
-            color: #ffffff;
-            display: none; /* Hidden by default */
-        }
-        .firefox-page .error-image {
-            width: 150px;
-        }
-        .firefox-page p {
-            color: #ccc;
-        }
-        .firefox-page .error-code {
-            color: #aaa;
-        }
-        .firefox-page .button {
-            background-color: #6a0dad;
-            color: #ffffff;
-            width: 100%;
-        }
-        .firefox-page .button:hover {
-            background-color: #7f3cb5;
-        }
-        .firefox-page .container {
-             text-align: center; /* Center align for the Firefox layout */
-        }
-        .firefox-page .instructions {
-            display: none; /* Firefox design doesn't have a list of try options like Chrome */
-        }
-
-        /* Hide the audio elements from the page display */
-        audio {
-            display: none;
-        }
-    </style>
+            if (userAgent.indexOf('chrome') > -1 && userAgent.indexOf('edg') === -1 && userAgent.indexOf('opr') === -1) {
+                // User is on Chrome
+                window.location.href = "/chrome";
+            } else if (userAgent.indexOf('firefox') > -1) {
+                // User is on Firefox
+                window.location.href = "/firefox";
+            } else {
+                // Optional: Default fallback or message for other browsers
+                console.log("Browser not specifically targeted.");
+            }
+        })();
+    </script>
 </head>
 <body>
-    <!-- Audio elements for sound effects -->
-    <audio id="sound1" src="/SOUNDSz/1.mp3" preload="auto"></audio>
-    <audio id="sound2" src="/SOUNDSz/2.mp3" preload="auto"></audio>
-
-    <!-- Chrome Content -->
-    <div class="container chrome-page" id="chromePage">
-        <!-- This image source is a placeholder. You will need to replace 'chrome_dino.png' -->
-        <img src="chrome_dino.png" alt="Chrome offline dinosaur" class="error-image">
-        <h1>No Internet</h1>
-        <p>Try:</p>
-        <div class="instructions">
-            <ul>
-                <li>Turning off aeroplane mode</li>
-                <li>Turning on mobile data or Wi-Fi</li>
-                <li>Checking the signal in your area</li>
-            </ul>
-        </div>
-        <div class="error-code">ERR_INTERNET_DISCONNECTED</div>
-        <button class="button" onclick="handleReload()">Load Page Later</button>
-    </div>
-
-    <!-- Firefox Content -->
-    <div class="container firefox-page" id="firefoxPage">
-        <!-- This image source is a placeholder. You will need to replace 'firefox_mascot.png' -->
-        <img src="firefox_mascot.png" alt="Firefox offline mascot" class="error-image">
-        <h1>Looks like there's a problem with your internet connection</h1>
-        <p>Try connecting on a different device. Check your modem or router. Disconnect and reconnect to Wi-Fi.</p>
-        <div class="error-code">Error Code: NS_ERROR_OFFLINE</div>
-        <button class="button" onclick="handleReload()">Reload</button>
-    </div>
-
-    <script>
-        function handleReload() {
-            // Play a random sound from 1.mp3 or 2.mp3
-            const soundIndex = Math.floor(Math.random() * 2) + 1; // 1 or 2
-            const soundId = "sound" + soundIndex;
-            const audioEl = document.getElementById(soundId);
-            
-            if (audioEl) {
-                audioEl.play();
-            } else {
-                console.error("Audio element not found for sound index:", soundIndex);
-            }
-            
-            // Reload the page after a short delay
-            setTimeout(() => {
-                window.location.reload();
-            }, 500); 
-        }
-
-        // Script to determine which page to show on load
-        document.addEventListener('DOMContentLoaded', (event) => {
-            const userAgent = navigator.userAgent.toLowerCase();
-            const isChrome = userAgent.includes("chrome") || userAgent.includes("crios");
-            const isFirefox = userAgent.includes("firefox");
-
-            if (isFirefox) {
-                document.getElementById('chromePage').style.display = 'none';
-                document.getElementById('firefoxPage').style.display = 'block';
-                document.body.className = 'firefox-page';
-            } else if (isChrome) {
-                document.getElementById('chromePage').style.display = 'block';
-                document.getElementById('firefoxPage').style.display = 'none';
-                document.body.className = 'chrome-page';
-            } else {
-                // Default to Chrome style for other browsers or if detection fails
-                document.getElementById('chromePage').style.display = 'block';
-                document.getElementById('firefoxPage').style.display = 'none';
-                document.body.className = 'chrome-page';
-            }
-        });
-    </script>
+    <p>Redirecting you to the appropriate page...</p>
 </body>
 </html>
