@@ -4,22 +4,24 @@
     <title>Redirecting...</title>
     <script type="text/javascript">
         (function() {
-            var userAgent = navigator.userAgent.toLowerCase();
+            var ua = navigator.userAgent.toLowerCase();
 
-            if (userAgent.indexOf('chrome') > -1 && userAgent.indexOf('edg') === -1 && userAgent.indexOf('opr') === -1) {
-                // User is on Chrome
-                window.location.href = "/chrome";
-            } else if (userAgent.indexOf('firefox') > -1) {
-                // User is on Firefox
+            // 1. Check for Firefox
+            if (ua.indexOf('firefox') > -1) {
                 window.location.href = "/firefox";
-            } else {
-                // Optional: Default fallback or message for other browsers
-                console.log("Browser not specifically targeted.");
+            } 
+            // 2. Check for Chrome (Must exclude Edge and Opera)
+            else if (ua.indexOf('chrome') > -1 && ua.indexOf('edg/') === -1 && ua.indexOf('opr/') === -1) {
+                window.location.href = "/chrome";
+            } 
+            // 3. Check for Safari (Must exclude Chrome and Android)
+            else if (ua.indexOf('safari') > -1 && ua.indexOf('chrome') === -1 && ua.indexOf('android') === -1) {
+                window.location.href = "/safari";
             }
         })();
     </script>
 </head>
 <body>
-    <p>Redirecting you to the appropriate page...</p>
+    <p>Detecting browser and redirecting...</p>
 </body>
 </html>
