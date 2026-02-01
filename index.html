@@ -2,101 +2,83 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>Web-blox: Colors & Characters</title>
+    <title>Web-blox: Fixed Spawn & Camera</title>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
     <script src="https://unpkg.com/peerjs@1.4.7/dist/peerjs.min.js"></script>
     <style>
-        body { margin: 0; overflow: hidden; background: #1a1a1a; font-family: 'Courier New', monospace; color: #fff; }
-        #gui { position: absolute; top: 10px; left: 10px; z-index: 100; background: rgba(30,30,30,0.9); padding: 15px; border: 2px solid #555; border-radius: 8px; }
-        input, button { background: #333; color: #fff; border: 1px solid #777; padding: 8px; margin: 5px 0; width: 100%; border-radius: 4px; }
-        #status { font-weight: bold; color: #fbff00; }
+        body { margin: 0; overflow: hidden; background: #1a1a1a; font-family: monospace; color: #fff; }
+        #gui { position: absolute; top: 10px; left: 10px; z-index: 100; background: rgba(20,20,20,0.8); padding: 15px; border: 1px solid #0f0; border-radius: 4px; }
+        input, button { background: #000; color: #0f0; border: 1px solid #0f0; padding: 8px; margin: 5px 0; width: 100%; }
+        #status { color: #0f0; margin-bottom: 10px; }
     </style>
 </head>
 <body>
 
     <div id="gui">
-        <div id="status">Status: Standby</div>
+        <div id="status">Status: Awaiting Map...</div>
         <input type="file" id="upload" accept=".rbxl">
-        <input type="text" id="peer-id" placeholder="Paste ID to Join">
-        <button id="connect-btn">Connect & Spawn</button>
-        <p id="my-id" style="font-size: 0.8em; opacity: 0.7;">My ID: ...</p>
+        <input type="text" id="peer-id" placeholder="Paste Host ID">
+        <button id="connect-btn">Join Game</button>
+        <p id="my-id">ID: ...</p>
     </div>
 
     <script>
-        // --- 1. THE VIEWPORT ---
+        // --- 1. CORE RENDERER ---
         const scene = new THREE.Scene();
         const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 10000);
         const renderer = new THREE.WebGLRenderer({ antialias: true });
         renderer.setSize(window.innerWidth, window.innerHeight);
         document.body.appendChild(renderer.domElement);
 
-        scene.add(new THREE.AmbientLight(0xffffff, 0.7));
-        const sun = new THREE.DirectionalLight(0xffffff, 0.5);
-        sun.position.set(50, 100, 50);
-        scene.add(sun);
-        camera.position.set(20, 20, 50);
+        scene.add(new THREE.AmbientLight(0xffffff, 0.8));
+        camera.position.set(0, 20, 30);
 
-        const players = {}; // Track remote player meshes
+        const players = {}; 
+        let spawnPos = new THREE.Vector3(0, 5, 0); // Default spawn
 
-        // --- 2. MULTIPLAYER LOGIC ---
-        const peer = new Peer();
-        let conn;
+        // --- 2. THE CHARACTER ---
+        const charGeo = new THREE.BoxGeometry(2, 5, 1);
+        const charMat = new THREE.MeshStandardMaterial({color: 0xff0000});
+        const myCharacter = new THREE.Mesh(charGeo, charMat);
+        scene.add(myCharacter);
+        myCharacter.position.copy(spawnPos);
 
-        peer.on('open', id => { document.getElementById('my-id').innerText = "My ID: " + id; });
-
-        peer.on('connection', c => {
-            conn = c;
-            setupSync();
-            document.getElementById('status').innerText = "Peer Joined!";
-        });
-
-        document.getElementById('connect-btn').onclick = () => {
-            conn = peer.connect(document.getElementById('peer-id').value);
-            setupSync();
-            document.getElementById('status').innerText = "Connected!";
-        };
-
-        function setupSync() {
-            conn.on('data', data => {
-                if (data.type === 'MAP') renderMap(data.payload);
-                if (data.type === 'MOVE') updatePlayer(data.id, data.pos);
-            });
-        }
-
-        // --- 3. THE PARSER (Colors + Positions) ---
+        // --- 3. PARSING & SPAWNING ---
         document.getElementById('upload').addEventListener('change', async (e) => {
             const text = await e.target.files[0].text();
             const mapData = parseRBXL(text);
             renderMap(mapData);
-            if(conn) conn.send({ type: 'MAP', payload: mapData });
+            
+            // Teleport to SpawnLocation if found
+            const spawn = mapData.find(p => p.isSpawn);
+            if (spawn) {
+                spawnPos.set(spawn.matrix.X, spawn.matrix.Y + 5, spawn.matrix.Z);
+                myCharacter.position.copy(spawnPos);
+                updateCamera();
+            }
+
+            if(conn) conn.send({ type: 'MAP', payload: mapData, spawn: spawnPos });
         });
 
         function parseRBXL(xml) {
             const doc = new DOMParser().parseFromString(xml, "text/xml");
             const parts = [];
             for (let item of doc.getElementsByTagName("Item")) {
-                if (item.getAttribute("class") === "Part" || item.getAttribute("class") === "SpawnLocation") {
+                const className = item.getAttribute("class");
+                if (className === "Part" || className === "SpawnLocation") {
                     const props = item.querySelector("Properties");
-                    
-                    // Parse Color3
                     const colorNode = props.querySelector('Color3[name="Color"]');
-                    const color = colorNode ? {
-                        r: parseFloat(colorNode.querySelector("R").textContent),
-                        g: parseFloat(colorNode.querySelector("G").textContent),
-                        b: parseFloat(colorNode.querySelector("B").textContent)
-                    } : { r: 0.6, g: 0.6, b: 0.6 };
-
-                    // Parse Size
                     const size = props.querySelector('Vector3[name="Size"]');
-                    
-                    // Parse CFrame (Position/Rotation)
                     const cf = props.querySelector('CoordinateFrame[name="CFrame"]');
+                    
                     const m = { X:0, Y:0, Z:0, R00:1, R01:0, R02:0, R10:0, R11:1, R12:0, R20:0, R21:0, R22:1 };
-                    for (let tag of cf.children) m[tag.tagName] = parseFloat(tag.textContent);
+                    if (cf) for (let tag of cf.children) m[tag.tagName] = parseFloat(tag.textContent);
 
                     parts.push({ 
+                        isSpawn: className === "SpawnLocation",
                         size: [parseFloat(size.querySelector("X").textContent), parseFloat(size.querySelector("Y").textContent), parseFloat(size.querySelector("Z").textContent)],
-                        color, matrix: m
+                        color: colorNode ? { r: parseFloat(colorNode.querySelector("R").textContent), g: parseFloat(colorNode.querySelector("G").textContent), b: parseFloat(colorNode.querySelector("B").textContent) } : {r:0.5, g:0.5, b:0.5},
+                        matrix: m
                     });
                 }
             }
@@ -104,43 +86,62 @@
         }
 
         function renderMap(data) {
-            scene.children = scene.children.filter(c => c.type !== "Mesh");
+            // Remove old map parts (keep characters)
+            scene.children = scene.children.filter(c => c === myCharacter || Object.values(players).includes(c) || c.type === "AmbientLight" || c.type === "DirectionalLight");
+            
             data.forEach(p => {
-                const mat = new THREE.MeshStandardMaterial({ color: new THREE.Color(p.color.r, p.color.g, p.color.b) });
-                const mesh = new THREE.Mesh(new THREE.BoxGeometry(...p.size), mat);
+                const mesh = new THREE.Mesh(new THREE.BoxGeometry(...p.size), new THREE.MeshStandardMaterial({ color: new THREE.Color(p.color.r, p.color.g, p.color.b) }));
                 const m4 = new THREE.Matrix4().set(p.matrix.R00, p.matrix.R01, p.matrix.R02, p.matrix.X, p.matrix.R10, p.matrix.R11, p.matrix.R12, p.matrix.Y, p.matrix.R20, p.matrix.R21, p.matrix.R22, p.matrix.Z, 0, 0, 0, 1);
                 mesh.applyMatrix4(m4);
                 scene.add(mesh);
             });
+            document.getElementById('status').innerText = "Map Loaded & Spawned";
         }
 
-        // --- 4. PLAYER MOVEMENT & CHARACTER ---
-        const myCharacter = new THREE.Mesh(new THREE.BoxGeometry(2, 5, 1), new THREE.MeshStandardMaterial({color: 0xff0000}));
-        scene.add(myCharacter);
+        // --- 4. CAMERA & MOVEMENT ---
+        function updateCamera() {
+            camera.position.set(myCharacter.position.x, myCharacter.position.y + 15, myCharacter.position.z + 25);
+            camera.lookAt(myCharacter.position);
+        }
 
         window.addEventListener('keydown', (e) => {
-            const speed = 1.5;
-            if(e.key === 'w') myCharacter.position.z -= speed;
-            if(e.key === 's') myCharacter.position.z += speed;
-            if(e.key === 'a') myCharacter.position.x -= speed;
-            if(e.key === 'd') myCharacter.position.x += speed;
+            const speed = 1.2;
+            if(e.key.toLowerCase() === 'w') myCharacter.position.z -= speed;
+            if(e.key.toLowerCase() === 's') myCharacter.position.z += speed;
+            if(e.key.toLowerCase() === 'a') myCharacter.position.x -= speed;
+            if(e.key.toLowerCase() === 'd') myCharacter.position.x += speed;
             
-            camera.position.set(myCharacter.position.x, myCharacter.position.y + 15, myCharacter.position.z + 20);
-            camera.lookAt(myCharacter.position);
-
+            updateCamera();
             if(conn) conn.send({ type: 'MOVE', id: peer.id, pos: myCharacter.position });
         });
 
-        function updatePlayer(id, pos) {
-            if (!players[id]) {
-                players[id] = new THREE.Mesh(new THREE.BoxGeometry(2, 5, 1), new THREE.MeshStandardMaterial({color: 0x00ff00}));
-                scene.add(players[id]);
-            }
-            players[id].position.set(pos.x, pos.y, pos.z);
+        // --- 5. NETWORKING (PeerJS) ---
+        const peer = new Peer();
+        let conn;
+        peer.on('open', id => { document.getElementById('my-id').innerText = "My ID: " + id; });
+        peer.on('connection', c => { conn = c; setupSync(); });
+        document.getElementById('connect-btn').onclick = () => { conn = peer.connect(document.getElementById('peer-id').value); setupSync(); };
+
+        function setupSync() {
+            conn.on('data', data => {
+                if (data.type === 'MAP') {
+                    renderMap(data.payload);
+                    myCharacter.position.copy(data.spawn);
+                    updateCamera();
+                }
+                if (data.type === 'MOVE') {
+                    if (!players[data.id]) {
+                        players[data.id] = new THREE.Mesh(charGeo, new THREE.MeshStandardMaterial({color: 0x00ff00}));
+                        scene.add(players[data.id]);
+                    }
+                    players[data.id].position.set(data.pos.x, data.pos.y, data.pos.z);
+                }
+            });
         }
 
         function animate() { requestAnimationFrame(animate); renderer.render(scene, camera); }
         animate();
+        updateCamera();
     </script>
 </body>
 </html>
