@@ -2,138 +2,144 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>Web-blox Pure Engine</title>
+    <title>Web-blox: Colors & Characters</title>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
     <script src="https://unpkg.com/peerjs@1.4.7/dist/peerjs.min.js"></script>
     <style>
-        body { margin: 0; overflow: hidden; background: #000; font-family: monospace; color: #0f0; }
-        #overlay { position: absolute; top: 10px; left: 10px; z-index: 10; background: rgba(0,0,0,0.7); padding: 15px; border: 1px solid #0f0; }
-        input, button { background: #111; color: #0f0; border: 1px solid #0f0; padding: 5px; cursor: pointer; }
+        body { margin: 0; overflow: hidden; background: #1a1a1a; font-family: 'Courier New', monospace; color: #fff; }
+        #gui { position: absolute; top: 10px; left: 10px; z-index: 100; background: rgba(30,30,30,0.9); padding: 15px; border: 2px solid #555; border-radius: 8px; }
+        input, button { background: #333; color: #fff; border: 1px solid #777; padding: 8px; margin: 5px 0; width: 100%; border-radius: 4px; }
+        #status { font-weight: bold; color: #fbff00; }
     </style>
 </head>
 <body>
 
-    <div id="overlay">
-        <div>
-            <strong>HOST:</strong> <input type="file" id="upload" accept=".rbxl">
-            <br><small id="my-id">Generating ID...</small>
-        </div>
-        <hr>
-        <div>
-            <strong>JOIN:</strong> <input type="text" id="peer-id" placeholder="Paste Host ID">
-            <button id="connect-btn">Connect</button>
-        </div>
+    <div id="gui">
         <div id="status">Status: Standby</div>
+        <input type="file" id="upload" accept=".rbxl">
+        <input type="text" id="peer-id" placeholder="Paste ID to Join">
+        <button id="connect-btn">Connect & Spawn</button>
+        <p id="my-id" style="font-size: 0.8em; opacity: 0.7;">My ID: ...</p>
     </div>
 
     <script>
-        // --- 1. CORE ENGINE ---
+        // --- 1. THE VIEWPORT ---
         const scene = new THREE.Scene();
-        const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 5000);
+        const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 10000);
         const renderer = new THREE.WebGLRenderer({ antialias: true });
         renderer.setSize(window.innerWidth, window.innerHeight);
         document.body.appendChild(renderer.domElement);
 
-        scene.add(new THREE.GridHelper(100, 100), new THREE.AmbientLight(0xffffff, 0.6));
-        const sun = new THREE.DirectionalLight(0xffffff, 0.8);
+        scene.add(new THREE.AmbientLight(0xffffff, 0.7));
+        const sun = new THREE.DirectionalLight(0xffffff, 0.5);
         sun.position.set(50, 100, 50);
         scene.add(sun);
-        camera.position.set(30, 30, 30);
-        camera.lookAt(0,0,0);
+        camera.position.set(20, 20, 50);
 
-        // --- 2. MULTIPLAYER (PeerJS) ---
-        const peer = new Peer(); 
+        const players = {}; // Track remote player meshes
+
+        // --- 2. MULTIPLAYER LOGIC ---
+        const peer = new Peer();
         let conn;
 
-        peer.on('open', id => { document.getElementById('my-id').innerText = "Your ID: " + id; });
+        peer.on('open', id => { document.getElementById('my-id').innerText = "My ID: " + id; });
 
-        // HOST SIDE: Receive connection
-        peer.on('connection', (c) => {
+        peer.on('connection', c => {
             conn = c;
-            setupConnection();
-            document.getElementById('status').innerText = "Client Connected!";
+            setupSync();
+            document.getElementById('status').innerText = "Peer Joined!";
         });
 
-        // CLIENT SIDE: Initiate connection
         document.getElementById('connect-btn').onclick = () => {
-            const id = document.getElementById('peer-id').value;
-            conn = peer.connect(id);
-            setupConnection();
+            conn = peer.connect(document.getElementById('peer-id').value);
+            setupSync();
+            document.getElementById('status').innerText = "Connected!";
         };
 
-        function setupConnection() {
-            conn.on('data', (data) => {
-                if (data.type === 'SCENE_DATA') {
-                    renderFromData(data.payload);
-                    document.getElementById('status').innerText = "Scene Synced";
-                }
+        function setupSync() {
+            conn.on('data', data => {
+                if (data.type === 'MAP') renderMap(data.payload);
+                if (data.type === 'MOVE') updatePlayer(data.id, data.pos);
             });
         }
 
-        // --- 3. PARSING & SYNCING ---
+        // --- 3. THE PARSER (Colors + Positions) ---
         document.getElementById('upload').addEventListener('change', async (e) => {
-            const file = e.target.files[0];
-            const text = await file.text();
-            const rawData = parseRobloxXML(text);
-            
-            renderFromData(rawData);
-            
-            // Broadcast to connected peers
-            if (conn) conn.send({ type: 'SCENE_DATA', payload: rawData });
+            const text = await e.target.files[0].text();
+            const mapData = parseRBXL(text);
+            renderMap(mapData);
+            if(conn) conn.send({ type: 'MAP', payload: mapData });
         });
 
-        function parseRobloxXML(xmlText) {
-            const parser = new DOMParser();
-            const xmlDoc = parser.parseFromString(xmlText, "text/xml");
-            const instances = [];
-            const items = xmlDoc.getElementsByTagName("Item");
-
-            for (let item of items) {
-                if (item.getAttribute("class") === "Part") {
-                    const props = item.querySelector('Properties');
-                    const size = props.getElementsByTagName("Vector3")[0];
-                    const cf = props.getElementsByTagName("CoordinateFrame")[0];
+        function parseRBXL(xml) {
+            const doc = new DOMParser().parseFromString(xml, "text/xml");
+            const parts = [];
+            for (let item of doc.getElementsByTagName("Item")) {
+                if (item.getAttribute("class") === "Part" || item.getAttribute("class") === "SpawnLocation") {
+                    const props = item.querySelector("Properties");
                     
-                    instances.push({
-                        size: { 
-                            x: parseFloat(size.querySelector("X").textContent), 
-                            y: parseFloat(size.querySelector("Y").textContent), 
-                            z: parseFloat(size.querySelector("Z").textContent) 
-                        },
-                        cframe: Array.from(cf.children).reduce((acc, tag) => {
-                            acc[tag.tagName] = parseFloat(tag.textContent);
-                            return acc;
-                        }, {})
+                    // Parse Color3
+                    const colorNode = props.querySelector('Color3[name="Color"]');
+                    const color = colorNode ? {
+                        r: parseFloat(colorNode.querySelector("R").textContent),
+                        g: parseFloat(colorNode.querySelector("G").textContent),
+                        b: parseFloat(colorNode.querySelector("B").textContent)
+                    } : { r: 0.6, g: 0.6, b: 0.6 };
+
+                    // Parse Size
+                    const size = props.querySelector('Vector3[name="Size"]');
+                    
+                    // Parse CFrame (Position/Rotation)
+                    const cf = props.querySelector('CoordinateFrame[name="CFrame"]');
+                    const m = { X:0, Y:0, Z:0, R00:1, R01:0, R02:0, R10:0, R11:1, R12:0, R20:0, R21:0, R22:1 };
+                    for (let tag of cf.children) m[tag.tagName] = parseFloat(tag.textContent);
+
+                    parts.push({ 
+                        size: [parseFloat(size.querySelector("X").textContent), parseFloat(size.querySelector("Y").textContent), parseFloat(size.querySelector("Z").textContent)],
+                        color, matrix: m
                     });
                 }
             }
-            return instances;
+            return parts;
         }
 
-        function renderFromData(data) {
-            // Clear old parts
+        function renderMap(data) {
             scene.children = scene.children.filter(c => c.type !== "Mesh");
-
             data.forEach(p => {
-                const geo = new THREE.BoxGeometry(p.size.x, p.size.y, p.size.z);
-                const mat = new THREE.MeshStandardMaterial({ color: 0x5555ff });
-                const mesh = new THREE.Mesh(geo, mat);
-
-                const m = new THREE.Matrix4().set(
-                    p.cframe.R00, p.cframe.R01, p.cframe.R02, p.cframe.X,
-                    p.cframe.R10, p.cframe.R11, p.cframe.R12, p.cframe.Y,
-                    p.cframe.R20, p.cframe.R21, p.cframe.R22, p.cframe.Z,
-                    0, 0, 0, 1
-                );
-                mesh.applyMatrix4(m);
+                const mat = new THREE.MeshStandardMaterial({ color: new THREE.Color(p.color.r, p.color.g, p.color.b) });
+                const mesh = new THREE.Mesh(new THREE.BoxGeometry(...p.size), mat);
+                const m4 = new THREE.Matrix4().set(p.matrix.R00, p.matrix.R01, p.matrix.R02, p.matrix.X, p.matrix.R10, p.matrix.R11, p.matrix.R12, p.matrix.Y, p.matrix.R20, p.matrix.R21, p.matrix.R22, p.matrix.Z, 0, 0, 0, 1);
+                mesh.applyMatrix4(m4);
                 scene.add(mesh);
             });
         }
 
-        function animate() {
-            requestAnimationFrame(animate);
-            renderer.render(scene, camera);
+        // --- 4. PLAYER MOVEMENT & CHARACTER ---
+        const myCharacter = new THREE.Mesh(new THREE.BoxGeometry(2, 5, 1), new THREE.MeshStandardMaterial({color: 0xff0000}));
+        scene.add(myCharacter);
+
+        window.addEventListener('keydown', (e) => {
+            const speed = 1.5;
+            if(e.key === 'w') myCharacter.position.z -= speed;
+            if(e.key === 's') myCharacter.position.z += speed;
+            if(e.key === 'a') myCharacter.position.x -= speed;
+            if(e.key === 'd') myCharacter.position.x += speed;
+            
+            camera.position.set(myCharacter.position.x, myCharacter.position.y + 15, myCharacter.position.z + 20);
+            camera.lookAt(myCharacter.position);
+
+            if(conn) conn.send({ type: 'MOVE', id: peer.id, pos: myCharacter.position });
+        });
+
+        function updatePlayer(id, pos) {
+            if (!players[id]) {
+                players[id] = new THREE.Mesh(new THREE.BoxGeometry(2, 5, 1), new THREE.MeshStandardMaterial({color: 0x00ff00}));
+                scene.add(players[id]);
+            }
+            players[id].position.set(pos.x, pos.y, pos.z);
         }
+
+        function animate() { requestAnimationFrame(animate); renderer.render(scene, camera); }
         animate();
     </script>
 </body>
