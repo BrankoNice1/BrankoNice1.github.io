@@ -1,0 +1,254 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MangosWiki</title>
+    <style>
+        @font-face {
+            font-family: 'MyMinecraftFont';
+            src: url('fonts/Minecraft.ttf') format('truetype');
+            font-weight: normal;
+            font-style: normal;
+        }
+
+        body, html {
+            margin: 0;
+            padding: 0;
+            height: 100%;
+            font-family: 'MyMinecraftFont', sans-serif;
+            background-color: white; 
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            overflow: hidden;
+        }
+
+        #input-container {
+            text-align: center;
+            transition: opacity 0.5s ease;
+        }
+
+        .title-text {
+            font-size: 3rem;
+            margin-bottom: 25px;
+            color: #000;
+            text-shadow: 4px 4px 0px #bababa;
+        }
+
+        .input-wrapper {
+            display: inline-flex;
+            align-items: center;
+            border: 5px solid black;
+            border-radius: 4px;
+            background: white;
+        }
+
+        input {
+            width: 280px;
+            height: 60px;
+            border: none;
+            padding: 0 15px;
+            font-size: 1.8rem;
+            font-family: 'MyMinecraftFont', sans-serif;
+            outline: none;
+        }
+
+        .submit-btn {
+            width: 70px;
+            height: 60px;
+            background-color: #00FF00;
+            border-left: 5px solid black;
+            cursor: pointer;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-size: 2.5rem;
+        }
+
+        #welcome-screen {
+            display: none;
+            opacity: 0;
+            transform: translateY(20px);
+            transition: opacity 1.2s ease, transform 1.2s ease;
+        }
+
+        .welcome-content {
+            display: flex;
+            flex-direction: row;
+            align-items: center;
+            justify-content: center;
+            gap: 20px;
+            white-space: nowrap;
+        }
+
+        #welcome-phrase {
+            font-size: 3.5rem;
+            color: #333;
+            text-shadow: 4px 4px 0px #ddd;
+        }
+
+        .mc-gif {
+            width: 90px;
+            height: 90px;
+            image-rendering: pixelated;
+        }
+
+        #white-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: white;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.7s ease;
+            z-index: 10;
+        }
+    </style>
+</head>
+<body>
+
+    <div id="white-overlay"></div>
+
+    <div id="input-container">
+        <div class="title-text">Whats Your Name?</div>
+        <div class="input-wrapper">
+            <input type="text" id="nameInput" autocomplete="off" onkeydown="if(event.key === 'Enter') start()">
+            <div class="submit-btn" onclick="start()">→</div>
+        </div>
+    </div>
+
+    <div id="welcome-screen">
+        <div class="welcome-content">
+            <span id="welcome-phrase"></span>
+            <img class="mc-gif" src="gifs/hello.gif" alt="GIF">
+        </div>
+    </div>
+
+    <script>
+        function start() {
+            const name = document.getElementById('nameInput').value.trim();
+            if (!name) return;
+
+            const inputCont = document.getElementById('input-container');
+            const welcomeCont = document.getElementById('welcome-screen');
+            const overlay = document.getElementById('white-overlay');
+            const phrase = document.getElementById('welcome-phrase');
+
+            inputCont.style.opacity = '0';
+
+            setTimeout(() => {
+                overlay.style.opacity = '1';
+                inputCont.style.display = 'none';
+                phrase.innerText = `Its Good To See You, ${name}`;
+                welcomeCont.style.display = 'block';
+
+                setTimeout(() => {
+                    overlay.style.opacity = '0';
+                    welcomeCont.style.opacity = '1';
+                    welcomeCont.style.transform = 'translateY(0)';
+                }, 700);
+            }, 500);
+        }
+    </script>
+</body>
+</html>            border-left: 5px solid black;
+            cursor: pointer;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-size: 2.5rem;
+        }
+
+        /* --- WELCOME SCREEN (One line) --- */
+        #welcome-screen {
+            display: none;
+            opacity: 0;
+            transform: translateY(20px);
+            transition: opacity 1.2s ease, transform 1.2s ease;
+        }
+
+        .welcome-content {
+            display: flex;
+            flex-direction: row;
+            align-items: center;
+            justify-content: center;
+            gap: 20px;
+            white-space: nowrap;
+        }
+
+        #welcome-phrase {
+            font-size: 3.5rem;
+            color: #333;
+            text-shadow: 4px 4px 0px #ddd;
+        }
+
+        .mc-gif {
+            width: 90px;
+            height: 90px;
+            image-rendering: pixelated;
+        }
+
+        #white-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: white;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.7s ease;
+            z-index: 10;
+        }
+    </style>
+</head>
+<body>
+
+    <div id="white-overlay"></div>
+
+    <div id="input-container">
+        <div class="title-text">Whats Your Name?</div>
+        <div class="input-wrapper">
+            <input type="text" id="nameInput" autocomplete="off" onkeydown="if(event.key === 'Enter') start()">
+            <div class="submit-btn" onclick="start()">→</div>
+        </div>
+    </div>
+
+    <div id="welcome-screen">
+        <div class="welcome-content">
+            <span id="welcome-phrase"></span>
+            <img class="mc-gif" src="gifs/hello.gif" alt="GIF">
+        </div>
+    </div>
+
+    <script>
+        function start() {
+            const name = document.getElementById('nameInput').value.trim();
+            if (!name) return;
+
+            const inputCont = document.getElementById('input-container');
+            const welcomeCont = document.getElementById('welcome-screen');
+            const overlay = document.getElementById('white-overlay');
+            const phrase = document.getElementById('welcome-phrase');
+
+            inputCont.style.opacity = '0';
+
+            setTimeout(() => {
+                overlay.style.opacity = '1';
+                inputCont.style.display = 'none';
+                phrase.innerText = `Its Good To See You, ${name}`;
+                welcomeCont.style.display = 'block';
+
+                setTimeout(() => {
+                    overlay.style.opacity = '0';
+                    welcomeCont.style.opacity = '1';
+                    welcomeCont.style.transform = 'translateY(0)';
+                }, 700);
+            }, 500);
+        }
+    </script>
+</body>
+</html>
