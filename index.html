@@ -154,6 +154,10 @@
                     overlay.style.opacity = '0';
                     welcomeCont.style.opacity = '1';
                     welcomeCont.style.transform = 'translateY(0)';
+
+                    setTimeout(() => {
+                        window.location.href = 'main.html';
+                    }, 3000);
                 }, 700);
             }, 500);
         }
