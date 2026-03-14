@@ -1,0 +1,128 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MangosWiki</title>
+    <link rel="icon" href="favicon.ico" type="image/x-icon">
+    <style>
+        @font-face {
+            font-family: 'MyMinecraftFont';
+            src: url('fonts/Minecraft.ttf') format('truetype');
+            font-weight: normal;
+            font-style: normal;
+        }
+
+        body, html {
+            margin: 0;
+            padding: 0;
+            height: 100%;
+            font-family: 'MyMinecraftFont', sans-serif;
+            background-color: white; 
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            overflow: hidden;
+        }
+
+        header {
+            width: 100%;
+            padding: 30px 0;
+            text-align: center;
+            font-size: clamp(1.2rem, 5vw, 2rem);
+            color: #000;
+            text-shadow: 0.08em 0.08em 0px #bababa;
+        }
+
+        #main-wrapper {
+            flex-grow: 1;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            width: 100%;
+        }
+
+        #selection-screen {
+            text-align: center;
+            width: 90%;
+            max-width: 900px;
+            animation: fadeIn 1s ease forwards;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .selection-title {
+            font-size: clamp(1.5rem, 7vw, 3rem);
+            margin-bottom: 40px;
+            color: #000;
+            text-shadow: 0.1em 0.1em 0px #bababa;
+        }
+
+        .button-grid {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
+            gap: 20px;
+        }
+
+        .choice-card {
+            border: 0.3rem solid black;
+            padding: 20px;
+            cursor: pointer;
+            transition: transform 0.1s, background-color 0.1s;
+            background: #f0f0f0;
+            width: 180px;
+            text-decoration: none;
+            color: black;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            border-radius: 4px;
+        }
+
+        .choice-card:hover {
+            background-color: #e0e0e0;
+            transform: translateY(-5px);
+        }
+
+        .choice-card:active {
+            transform: scale(0.95);
+            background-color: #d0d0d0;
+        }
+
+        .choice-card img {
+            width: 80px;
+            height: 80px;
+            image-rendering: pixelated;
+            margin-bottom: 15px;
+        }
+
+        .choice-card span {
+            display: block;
+            font-size: 1.2rem;
+        }
+    </style>
+</head>
+<body>
+
+    <header>MangosWiki</header>
+
+    <div id="main-wrapper">
+        <div id="selection-screen">
+            <div class="selection-title">I wanna learn...</div>
+            <div class="button-grid">
+
+                <a href="coding.html" class="choice-card">
+                    <img src="icons/coding.png alt="">
+                    <span>Coding</span>
+                </a>
+
+            </div>
+        </div>
+    </div>
+
+</body>
+</html>
