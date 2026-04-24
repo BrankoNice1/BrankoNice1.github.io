@@ -65,6 +65,7 @@
             display: flex;
             flex-wrap: wrap;
             justify-content: center;
+            align-items: center;
             gap: 20px;
         }
 
@@ -81,6 +82,7 @@
             flex-direction: column;
             align-items: center;
             border-radius: 4px;
+            box-sizing: border-box;
         }
 
         .choice-card:hover {
@@ -104,6 +106,25 @@
             display: block;
             font-size: 1.2rem;
         }
+
+        /* Circular Games Button Styling */
+        .circle-btn {
+            border-radius: 50% !important; /* Force circle shape */
+            width: 140px;
+            height: 140px;
+            justify-content: center;
+            padding: 10px;
+        }
+
+        .game-icon {
+            font-size: 3rem;
+            margin-bottom: 5px;
+            line-height: 1;
+        }
+
+        .circle-btn span:last-child {
+            font-size: 1rem;
+        }
     </style>
 </head>
 <body>
@@ -118,6 +139,11 @@
                 <a href="coding.html" class="choice-card">
                     <img src="icons/coding.png" alt="">
                     <span>Coding</span>
+                </a>
+
+                <a href="games.html" class="choice-card circle-btn">
+                    <span class="game-icon">🎮</span>
+                    <span>Games</span>
                 </a>
 
             </div>
