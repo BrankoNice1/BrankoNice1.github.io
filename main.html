@@ -65,7 +65,6 @@
             display: flex;
             flex-wrap: wrap;
             justify-content: center;
-            align-items: center;
             gap: 20px;
         }
 
@@ -82,7 +81,6 @@
             flex-direction: column;
             align-items: center;
             border-radius: 4px;
-            box-sizing: border-box;
         }
 
         .choice-card:hover {
@@ -107,23 +105,39 @@
             font-size: 1.2rem;
         }
 
-        /* Circular Games Button Styling */
-        .circle-btn {
-            border-radius: 50% !important; /* Force circle shape */
-            width: 140px;
-            height: 140px;
+        /* Small Floating Games Button (Bottom Left) */
+        .games-fab {
+            position: fixed;
+            bottom: 20px;
+            left: 20px;
+            width: 70px;
+            height: 70px;
+            background: #f0f0f0;
+            border: 0.25rem solid black;
+            border-radius: 50%;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
             justify-content: center;
-            padding: 10px;
+            text-decoration: none;
+            color: black;
+            transition: transform 0.1s, background-color 0.1s;
+            z-index: 100;
         }
 
-        .game-icon {
-            font-size: 3rem;
-            margin-bottom: 5px;
+        .games-fab:hover {
+            background-color: #e0e0e0;
+            transform: scale(1.1);
+        }
+
+        .games-fab .icon {
+            font-size: 1.5rem;
             line-height: 1;
         }
 
-        .circle-btn span:last-child {
-            font-size: 1rem;
+        .games-fab .label {
+            font-size: 0.6rem;
+            margin-top: 2px;
         }
     </style>
 </head>
@@ -141,14 +155,14 @@
                     <span>Coding</span>
                 </a>
 
-                <a href="games.html" class="choice-card circle-btn">
-                    <span class="game-icon">🎮</span>
-                    <span>Games</span>
-                </a>
-
             </div>
         </div>
     </div>
+
+    <a href="games.html" class="games-fab">
+        <span class="icon">🎮</span>
+        <span class="label">Games</span>
+    </a>
 
 </body>
 </html>
