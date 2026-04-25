@@ -18,9 +18,9 @@
             height: 600px;
             background: #000;
             cursor: pointer;
+            box-shadow: 0 0 30px rgba(75, 0, 130, 0.5);
         }
 
-        /* CUSTOM LOADING LAYER */
         #custom-loader {
             position: absolute;
             top: 0; left: 0;
@@ -46,7 +46,7 @@
             color: rgba(255, 255, 255, 0.4);
             font-size: 11px;
             margin-top: 15px;
-            text-transform: lowercase;
+            letter-spacing: 1px;
         }
 
         ruffle-player {
@@ -54,15 +54,13 @@
             height: 100%;
         }
 
-        /* Classes for JavaScript to toggle */
         .loading-animation {
             animation: pulse 1.5s infinite;
         }
 
         @keyframes pulse {
-            0% { opacity: 1; }
-            50% { opacity: 0.5; }
-            100% { opacity: 1; }
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.4; }
         }
     </style>
 </head>
@@ -79,13 +77,15 @@
     <script src="https://unpkg.com/@ruffle-rs/ruffle"></script>
 
     <script>
-        // Move function to the top to prevent ReferenceError
         window.RufflePlayer = window.RufflePlayer || {};
         window.RufflePlayer.config = {
             "letterbox": "on",
             "splashScreen": false, 
             "autoplay": "on",
-            "unmuteOverlay": "hidden"
+            "unmuteOverlay": "hidden",
+            "allowScriptAccess": true,
+            /* This helps Ruffle ignore some external data blocks that cause CORS hangs */
+            "parameters": "", 
         };
 
         const loader = document.getElementById("custom-loader");
@@ -96,24 +96,24 @@
         const player = ruffle.createPlayer();
         document.getElementById("container").appendChild(player);
 
-        // Pre-load the game in the background
+        // Path to the game
         player.load("https://brankonice1.github.io/games/flash/papapizzeria/papapizzeria.swf");
 
-        // Click Event Handler
         wrapper.addEventListener("click", function() {
-            // 1. Change text and start animation
+            // Check if game is actually loaded into Ruffle yet
             statusText.innerText = "the game is loading wait.";
             statusText.classList.add("loading-animation");
             
-            // 2. Try to play (activates audio context)
+            // Activate Audio Context
             player.play();
 
-            // 3. Monitor if game is loaded
+            // Wait for the game to be ready to display
             const checkLoad = setInterval(() => {
-                // percentLoaded is a Ruffle property (0 to 100)
+                // If metadata exists, the SWF has at least parsed the header
                 if (player.metadata) { 
                     clearInterval(checkLoad);
-                    fadeOutLoader();
+                    // Short delay to ensure the first frame is ready
+                    setTimeout(fadeOutLoader, 1500);
                 }
             }, 100);
         });
