@@ -3,23 +3,31 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Papa's Pizzeria | BrankoNice1</title>
+    <title>Papa's Pizzeria | MangosWiki</title>
     <style>
-        body {
+        /* Base styles for your page */
+        body, html {
             margin: 0;
+            padding: 0;
+            width: 100%;
+            height: 100%;
             background-color: #000;
             display: flex;
             justify-content: center;
             align-items: center;
-            height: 100vh;
             overflow: hidden;
-            font-family: 'Segoe UI', Tahoma, sans-serif;
         }
 
         #container {
             width: 800px;
             height: 600px;
-            background-color: #000;
+            position: relative;
+        }
+
+        /* This ensures the Ruffle player fills the container */
+        ruffle-player {
+            width: 100%;
+            height: 100%;
         }
     </style>
 </head>
@@ -35,55 +43,56 @@
         window.RufflePlayer.config = {
             "letterbox": "on",
             "splashScreen": true,
-            /* Purple and Black fade */
-            "overlayColor": "linear-gradient(180deg, #4b0082 0%, #000000 100%)",
+            /* Forces the background of the loading screen to the fade */
+            "backgroundColor": "#4b0082", 
         };
 
-        window.addEventListener("load", (event) => {
+        window.addEventListener("DOMContentLoaded", () => {
             const ruffle = window.RufflePlayer.newest();
             const player = ruffle.createPlayer();
             const container = document.getElementById("container");
             container.appendChild(player);
 
-            // Updated URL to your GitHub Pages path
-            player.load("https://brankonice1.github.io/games/flash/papapizzeria/papapizzeria.swf");
+            // Load the game
+            player.load("https://brankonice1.github.io/games/flash/papapizzeria.swf");
 
-            // Shadow DOM injection for custom text
-            const style = document.createElement('style');
-            style.textContent = `
-                ruffle-player :part(message) {
-                    visibility: hidden;
-                    position: relative;
+            /* CRITICAL FIX: We inject a <style> tag directly into the 
+               player's Shadow DOM once it's ready.
+            */
+            player.addEventListener("loadedmetadata", () => {
+                const style = document.createElement('style');
+                style.textContent = `
+                    #overlay {
+                        background: linear-gradient(180deg, #4b0082 0%, #000000 100%) !important;
+                    }
+                    #message {
+                        visibility: hidden !important;
+                    }
+                    #message::after {
+                        content: "the game is loading wait.";
+                        visibility: visible;
+                        position: absolute;
+                        top: 0; left: 0; width: 100%;
+                        text-align: center;
+                        color: white;
+                        font-family: sans-serif;
+                        font-size: 20px;
+                    }
+                    #message::before {
+                        content: "powered by ruffle";
+                        visibility: visible;
+                        position: absolute;
+                        top: 40px; left: 0; width: 100%;
+                        text-align: center;
+                        color: rgba(255,255,255,0.5);
+                        font-size: 12px;
+                    }
+                `;
+                // Accessing the shadowRoot to apply styles inside Ruffle
+                if (player.shadowRoot) {
+                    player.shadowRoot.appendChild(style);
                 }
-
-                /* Custom message */
-                ruffle-player :part(message)::after {
-                    content: "the game is loading wait.";
-                    visibility: visible;
-                    position: absolute;
-                    left: 0;
-                    top: 0;
-                    width: 100%;
-                    text-align: center;
-                    color: white;
-                    font-size: 18px;
-                }
-
-                /* Small powered by ruffle text */
-                ruffle-player :part(message)::before {
-                    content: "powered by ruffle";
-                    visibility: visible;
-                    position: absolute;
-                    top: 30px;
-                    left: 0;
-                    width: 100%;
-                    text-align: center;
-                    color: rgba(255, 255, 255, 0.6);
-                    font-size: 10px;
-                    text-transform: lowercase;
-                }
-            `;
-            document.head.appendChild(style);
+            });
         });
     </script>
 </body>
