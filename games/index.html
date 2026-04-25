@@ -1,0 +1,152 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MangosWiki - Games</title>
+    <style>
+        body, html {
+            margin: 0; padding: 0; width: 100%; height: 100%;
+            background-color: #000;
+            display: flex; flex-direction: column;
+            overflow: hidden; font-family: 'Segoe UI', Tahoma, sans-serif;
+        }
+
+        /* Top Header Tab */
+        header {
+            height: 40px;
+            width: 100%;
+            background-color: #1a1a1b; /* Slightly lighter dark for the tab bar */
+            border-bottom: 1px solid #333;
+            display: flex;
+            align-items: center;
+            padding-left: 12px;
+            color: #d7dadc;
+            font-size: 13px;
+            box-sizing: border-box;
+            z-index: 10;
+        }
+
+        header img {
+            height: 18px;
+            width: 18px;
+            margin-right: 10px;
+            border-radius: 3px;
+        }
+
+        /* Main Layout Content */
+        #main-content {
+            display: flex;
+            flex-grow: 1;
+            width: 100%;
+            height: calc(100vh - 40px);
+        }
+
+        /* Games List Sidebar */
+        #sidebar {
+            width: 250px;
+            background-color: #0f0f0f;
+            border-right: 1px solid #333;
+            overflow-y: auto;
+            padding: 15px;
+            box-sizing: border-box;
+        }
+
+        .game-button {
+            display: flex;
+            align-items: center;
+            background: #1a1a1b;
+            border: 1px solid #333;
+            color: white;
+            padding: 10px;
+            width: 100%;
+            border-radius: 5px;
+            cursor: pointer;
+            margin-bottom: 10px;
+            transition: background 0.3s;
+            text-align: left;
+        }
+
+        .game-button:hover {
+            background: #2a2a2b;
+        }
+
+        .game-button img {
+            width: 30px;
+            height: 30px;
+            margin-right: 12px;
+            border-radius: 4px;
+        }
+
+        /* Game Display Area */
+        #game-wrapper {
+            flex-grow: 1;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            background-color: #000;
+            position: relative;
+        }
+
+        iframe {
+            width: 100%;
+            height: 100%;
+            border: none;
+        }
+
+        /* Fixed Flash size: 800x600 container if needed */
+        #container {
+            width: 800px;
+            height: 600px;
+            background: #000;
+            position: relative;
+            box-shadow: 0 0 20px rgba(0,0,0,0.5);
+        }
+
+        /* Custom Scrollbar for Sidebar */
+        #sidebar::-webkit-scrollbar {
+            width: 6px;
+        }
+        #sidebar::-webkit-scrollbar-thumb {
+            background: #333;
+            border-radius: 10px;
+        }
+    </style>
+</head>
+<body>
+
+    <header>
+        <img src="https://brankonice1.github.io/favicon.ico" alt="icon">
+        <span>MangosWiki</span>
+    </header>
+
+    <div id="main-content">
+        <div id="sidebar">
+            <div style="color: #888; font-size: 11px; margin-bottom: 15px; text-transform: uppercase; letter-spacing: 1px;">Library</div>
+            
+            <button class="game-button" onclick="loadGame('https://brankonice1.github.io/games/flash/papapizzeria/#')">
+                <img src="https://raw.githubusercontent.com/BrankoNice1/brankonice1.github.io/main/icons/Untitled.jpg" alt="Pizzeria Icon">
+                <span>Papa's Pizzeria</span>
+            </button>
+
+            </div>
+
+        <div id="game-wrapper">
+            <div id="container">
+                <iframe id="game-frame" src="about:blank"></iframe>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        function loadGame(url) {
+            document.getElementById('game-frame').src = url;
+        }
+
+        // Load the first game by default
+        window.onload = function() {
+            loadGame('https://brankonice1.github.io/games/flash/papapizzeria/#');
+        };
+    </script>
+</body>
+</html>
