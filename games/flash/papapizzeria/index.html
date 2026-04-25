@@ -3,21 +3,69 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Papa's Pizzeria | BrankoNice1</title>
+    <title>Papa's Pizzeria | MangosWiki</title>
     <style>
         body, html {
             margin: 0; padding: 0; width: 100%; height: 100%;
             background-color: #000;
             display: flex; justify-content: center; align-items: center;
-            overflow: hidden; font-family: sans-serif;
+            overflow: hidden; font-family: 'Segoe UI', sans-serif;
         }
-        #container { width: 800px; height: 600px; }
-        ruffle-player { width: 100%; height: 100%; }
+
+        #game-wrapper {
+            position: relative;
+            width: 800px;
+            height: 600px;
+            background: #000;
+        }
+
+        /* THE "CAPCUT" LAYER (Custom Loading Screen) */
+        #custom-loader {
+            position: absolute;
+            top: 0; left: 0;
+            width: 100%; height: 100%;
+            /* Cool Purple to Black Fade */
+            background: linear-gradient(180deg, #4b0082 0%, #1a0033 50%, #000000 100%);
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            z-index: 99; /* Sits on top of everything */
+            transition: opacity 0.5s ease;
+            pointer-events: none; /* Let clicks pass through if needed */
+        }
+
+        .loading-text {
+            color: white;
+            font-size: 22px;
+            font-weight: bold;
+            letter-spacing: 1px;
+            margin-bottom: 10px;
+            text-shadow: 0 0 10px rgba(138, 43, 226, 0.8);
+        }
+
+        .powered-by {
+            color: rgba(255, 255, 255, 0.4);
+            font-size: 11px;
+            text-transform: lowercase;
+        }
+
+        ruffle-player {
+            width: 100%;
+            height: 100%;
+        }
     </style>
 </head>
 <body>
 
-    <div id="container"></div>
+    <div id="game-wrapper">
+        <div id="custom-loader">
+            <div class="loading-text">the game is loading wait.</div>
+            <div class="powered-by">powered by ruffle</div>
+        </div>
+        
+        <div id="container"></div>
+    </div>
 
     <script src="https://unpkg.com/@ruffle-rs/ruffle"></script>
 
@@ -25,64 +73,28 @@
         window.RufflePlayer = window.RufflePlayer || {};
         window.RufflePlayer.config = {
             "letterbox": "on",
-            "splashScreen": true,
-            "backgroundColor": "#4b0082"
+            "splashScreen": false, // Disable Ruffle's built-in splash to avoid double loading
         };
 
-        const container = document.getElementById("container");
         const ruffle = window.RufflePlayer.newest();
         const player = ruffle.createPlayer();
+        const container = document.getElementById("container");
         container.appendChild(player);
 
-        // Targeted the specific SWF inside your directory
+        // Load the game
         player.load("https://brankonice1.github.io/games/flash/papapizzeria/papapizzeria.swf");
 
-        // STYLING INJECTION
-        // This targets the Ruffle Shadow DOM directly to force the purple fade and text
-        const injectStyles = () => {
-            if (player.shadowRoot) {
-                const styleExists = player.shadowRoot.querySelector("#custom-css");
-                if (!styleExists) {
-                    const sheet = document.createElement("style");
-                    sheet.id = "custom-css";
-                    sheet.textContent = `
-                        #overlay {
-                            background: linear-gradient(180deg, #4b0082 0%, #000000 100%) !important;
-                        }
-                        #message {
-                            visibility: hidden !important;
-                        }
-                        #message::after {
-                            content: "the game is loading wait.";
-                            visibility: visible;
-                            position: absolute;
-                            top: 0; left: 0; width: 100%;
-                            text-align: center;
-                            color: white;
-                            font-size: 20px;
-                        }
-                        #message::before {
-                            content: "powered by ruffle";
-                            visibility: visible;
-                            position: absolute;
-                            top: 40px; left: 0; width: 100%;
-                            text-align: center;
-                            color: rgba(255,255,255,0.5);
-                            font-size: 12px;
-                            text-transform: lowercase;
-                        }
-                    `;
-                    player.shadowRoot.appendChild(sheet);
-                }
-            }
-        };
-
-        // Use an observer to catch the loading screen as soon as it appears
-        const observer = new MutationObserver(injectStyles);
-        observer.observe(player, { childList: true, subtree: true });
-        
-        // Initial call
-        injectStyles();
+        // FADE OUT THE LAYER
+        // We wait for the game to actually start (onLoaded event)
+        player.addEventListener("loadedmetadata", () => {
+            // Give it 1 extra second to make sure it's smooth
+            setTimeout(() => {
+                const loader = document.getElementById("custom-loader");
+                loader.style.opacity = "0";
+                // Remove it from view entirely after fade
+                setTimeout(() => loader.style.display = "none", 500);
+            }, 1000);
+        });
     </script>
 </body>
 </html>
