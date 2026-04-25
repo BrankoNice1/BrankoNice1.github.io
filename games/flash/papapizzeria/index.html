@@ -1,0 +1,90 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Papa's Pizzeria | BrankoNice1</title>
+    <style>
+        body {
+            margin: 0;
+            background-color: #000;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            overflow: hidden;
+            font-family: 'Segoe UI', Tahoma, sans-serif;
+        }
+
+        #container {
+            width: 800px;
+            height: 600px;
+            background-color: #000;
+        }
+    </style>
+</head>
+<body>
+
+    <div id="container"></div>
+
+    <script src="https://unpkg.com/@ruffle-rs/ruffle"></script>
+
+    <script>
+        window.RufflePlayer = window.RufflePlayer || {};
+        
+        window.RufflePlayer.config = {
+            "letterbox": "on",
+            "splashScreen": true,
+            /* Purple and Black fade */
+            "overlayColor": "linear-gradient(180deg, #4b0082 0%, #000000 100%)",
+        };
+
+        window.addEventListener("load", (event) => {
+            const ruffle = window.RufflePlayer.newest();
+            const player = ruffle.createPlayer();
+            const container = document.getElementById("container");
+            container.appendChild(player);
+
+            // Updated URL to your GitHub Pages path
+            player.load("https://brankonice1.github.io/games/flash/papapizzeria/papapizzeria.swf");
+
+            // Shadow DOM injection for custom text
+            const style = document.createElement('style');
+            style.textContent = `
+                ruffle-player :part(message) {
+                    visibility: hidden;
+                    position: relative;
+                }
+
+                /* Custom message */
+                ruffle-player :part(message)::after {
+                    content: "the game is loading wait.";
+                    visibility: visible;
+                    position: absolute;
+                    left: 0;
+                    top: 0;
+                    width: 100%;
+                    text-align: center;
+                    color: white;
+                    font-size: 18px;
+                }
+
+                /* Small powered by ruffle text */
+                ruffle-player :part(message)::before {
+                    content: "powered by ruffle";
+                    visibility: visible;
+                    position: absolute;
+                    top: 30px;
+                    left: 0;
+                    width: 100%;
+                    text-align: center;
+                    color: rgba(255, 255, 255, 0.6);
+                    font-size: 10px;
+                    text-transform: lowercase;
+                }
+            `;
+            document.head.appendChild(style);
+        });
+    </script>
+</body>
+</html>
