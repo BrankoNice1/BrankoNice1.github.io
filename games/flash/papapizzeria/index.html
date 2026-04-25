@@ -9,7 +9,7 @@
             margin: 0; padding: 0; width: 100%; height: 100%;
             background-color: #000;
             display: flex; justify-content: center; align-items: center;
-            overflow: hidden; font-family: 'Segoe UI', sans-serif;
+            overflow: hidden; font-family: 'Segoe UI', Tahoma, sans-serif;
         }
 
         #game-wrapper {
@@ -17,36 +17,35 @@
             width: 800px;
             height: 600px;
             background: #000;
+            cursor: pointer;
         }
 
-        /* THE "CAPCUT" LAYER (Custom Loading Screen) */
+        /* CUSTOM LOADING LAYER */
         #custom-loader {
             position: absolute;
             top: 0; left: 0;
             width: 100%; height: 100%;
-            /* Cool Purple to Black Fade */
             background: linear-gradient(180deg, #4b0082 0%, #1a0033 50%, #000000 100%);
             display: flex;
             flex-direction: column;
             justify-content: center;
             align-items: center;
-            z-index: 99; /* Sits on top of everything */
-            transition: opacity 0.5s ease;
-            pointer-events: none; /* Let clicks pass through if needed */
+            z-index: 99;
+            transition: opacity 0.8s ease;
         }
 
-        .loading-text {
+        #status-text {
             color: white;
-            font-size: 22px;
+            font-size: 24px;
             font-weight: bold;
-            letter-spacing: 1px;
-            margin-bottom: 10px;
-            text-shadow: 0 0 10px rgba(138, 43, 226, 0.8);
+            text-align: center;
+            text-shadow: 0 0 15px rgba(138, 43, 226, 0.9);
         }
 
-        .powered-by {
+        .sub-text {
             color: rgba(255, 255, 255, 0.4);
             font-size: 11px;
+            margin-top: 15px;
             text-transform: lowercase;
         }
 
@@ -54,47 +53,77 @@
             width: 100%;
             height: 100%;
         }
+
+        /* Classes for JavaScript to toggle */
+        .loading-animation {
+            animation: pulse 1.5s infinite;
+        }
+
+        @keyframes pulse {
+            0% { opacity: 1; }
+            50% { opacity: 0.5; }
+            100% { opacity: 1; }
+        }
     </style>
 </head>
 <body>
 
     <div id="game-wrapper">
         <div id="custom-loader">
-            <div class="loading-text">the game is loading wait.</div>
-            <div class="powered-by">powered by ruffle</div>
+            <div id="status-text">CLICK TO PLAY</div>
+            <div class="sub-text">powered by ruffle</div>
         </div>
-        
         <div id="container"></div>
     </div>
 
     <script src="https://unpkg.com/@ruffle-rs/ruffle"></script>
 
     <script>
+        // Move function to the top to prevent ReferenceError
         window.RufflePlayer = window.RufflePlayer || {};
         window.RufflePlayer.config = {
             "letterbox": "on",
-            "splashScreen": false, // Disable Ruffle's built-in splash to avoid double loading
+            "splashScreen": false, 
+            "autoplay": "on",
+            "unmuteOverlay": "hidden"
         };
+
+        const loader = document.getElementById("custom-loader");
+        const statusText = document.getElementById("status-text");
+        const wrapper = document.getElementById("game-wrapper");
 
         const ruffle = window.RufflePlayer.newest();
         const player = ruffle.createPlayer();
-        const container = document.getElementById("container");
-        container.appendChild(player);
+        document.getElementById("container").appendChild(player);
 
-        // Load the game
+        // Pre-load the game in the background
         player.load("https://brankonice1.github.io/games/flash/papapizzeria/papapizzeria.swf");
 
-        // FADE OUT THE LAYER
-        // We wait for the game to actually start (onLoaded event)
-        player.addEventListener("loadedmetadata", () => {
-            // Give it 1 extra second to make sure it's smooth
-            setTimeout(() => {
-                const loader = document.getElementById("custom-loader");
-                loader.style.opacity = "0";
-                // Remove it from view entirely after fade
-                setTimeout(() => loader.style.display = "none", 500);
-            }, 1000);
+        // Click Event Handler
+        wrapper.addEventListener("click", function() {
+            // 1. Change text and start animation
+            statusText.innerText = "the game is loading wait.";
+            statusText.classList.add("loading-animation");
+            
+            // 2. Try to play (activates audio context)
+            player.play();
+
+            // 3. Monitor if game is loaded
+            const checkLoad = setInterval(() => {
+                // percentLoaded is a Ruffle property (0 to 100)
+                if (player.metadata) { 
+                    clearInterval(checkLoad);
+                    fadeOutLoader();
+                }
+            }, 100);
         });
+
+        function fadeOutLoader() {
+            loader.style.opacity = "0";
+            setTimeout(() => {
+                loader.style.display = "none";
+            }, 800);
+        }
     </script>
 </body>
 </html>
