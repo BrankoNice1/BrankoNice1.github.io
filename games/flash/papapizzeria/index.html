@@ -18,20 +18,20 @@
             height: 600px;
             background: #000;
             cursor: pointer;
-            box-shadow: 0 0 30px rgba(75, 0, 130, 0.5);
         }
 
+        /* CUSTOM PURPLE FADE LAYER */
         #custom-loader {
             position: absolute;
             top: 0; left: 0;
             width: 100%; height: 100%;
-            background: linear-gradient(180deg, #4b0082 0%, #1a0033 50%, #000000 100%);
+            background: linear-gradient(180deg, #4b0082 0%, #000000 100%);
             display: flex;
             flex-direction: column;
             justify-content: center;
             align-items: center;
-            z-index: 99;
-            transition: opacity 0.8s ease;
+            z-index: 999;
+            transition: opacity 1s ease, visibility 1s;
         }
 
         #status-text {
@@ -39,14 +39,13 @@
             font-size: 24px;
             font-weight: bold;
             text-align: center;
-            text-shadow: 0 0 15px rgba(138, 43, 226, 0.9);
+            text-shadow: 0 0 15px rgba(138, 43, 226, 0.8);
         }
 
         .sub-text {
             color: rgba(255, 255, 255, 0.4);
             font-size: 11px;
             margin-top: 15px;
-            letter-spacing: 1px;
         }
 
         ruffle-player {
@@ -54,19 +53,20 @@
             height: 100%;
         }
 
-        .loading-animation {
-            animation: pulse 1.5s infinite;
+        .pulse {
+            animation: pulse-animation 2s infinite;
         }
 
-        @keyframes pulse {
-            0%, 100% { opacity: 1; }
-            50% { opacity: 0.4; }
+        @keyframes pulse-animation {
+            0% { opacity: 1; }
+            50% { opacity: 0.5; }
+            100% { opacity: 1; }
         }
     </style>
 </head>
 <body>
 
-    <div id="game-wrapper">
+    <div id="game-wrapper" onclick="handleStart()">
         <div id="custom-loader">
             <div id="status-text">CLICK TO PLAY</div>
             <div class="sub-text">powered by ruffle</div>
@@ -80,49 +80,40 @@
         window.RufflePlayer = window.RufflePlayer || {};
         window.RufflePlayer.config = {
             "letterbox": "on",
-            "splashScreen": false, 
+            "splashScreen": false, // Keep false to hide the blue Ruffle screen
             "autoplay": "on",
-            "unmuteOverlay": "hidden",
-            "allowScriptAccess": true,
-            /* This helps Ruffle ignore some external data blocks that cause CORS hangs */
-            "parameters": "", 
+            "unmuteOverlay": "hidden"
         };
 
         const loader = document.getElementById("custom-loader");
         const statusText = document.getElementById("status-text");
-        const wrapper = document.getElementById("game-wrapper");
-
         const ruffle = window.RufflePlayer.newest();
         const player = ruffle.createPlayer();
         document.getElementById("container").appendChild(player);
 
-        // Path to the game
+        // Start loading the SWF immediately
         player.load("https://brankonice1.github.io/games/flash/papapizzeria/papapizzeria.swf");
 
-        wrapper.addEventListener("click", function() {
-            // Check if game is actually loaded into Ruffle yet
+        function handleStart() {
+            // Update text immediately on click
             statusText.innerText = "the game is loading wait.";
-            statusText.classList.add("loading-animation");
+            statusText.classList.add("pulse");
             
-            // Activate Audio Context
+            // Resume AudioContext
             player.play();
 
-            // Wait for the game to be ready to display
+            // Check if the game is ready
             const checkLoad = setInterval(() => {
-                // If metadata exists, the SWF has at least parsed the header
-                if (player.metadata) { 
+                // Once metadata is loaded, the game engine is active
+                if (player.metadata) {
                     clearInterval(checkLoad);
-                    // Short delay to ensure the first frame is ready
-                    setTimeout(fadeOutLoader, 1500);
+                    // Slight delay to ensure the first frame of the game renders
+                    setTimeout(() => {
+                        loader.style.opacity = "0";
+                        loader.style.visibility = "hidden";
+                    }, 1000);
                 }
-            }, 100);
-        });
-
-        function fadeOutLoader() {
-            loader.style.opacity = "0";
-            setTimeout(() => {
-                loader.style.display = "none";
-            }, 800);
+            }, 200);
         }
     </script>
 </body>
